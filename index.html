@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <!-- Control estricto de Caché del Navegador -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CAMBIO KAS-DFC</title>
+    
+    <!-- Librería SheetJS para leer archivos Excel .xlsx en directo -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <style>
+        :root {
+            --primary-color: #0056b3;
+            --primary-hover: #003d80;
+            --bg-color: #f4f7f9;
+            --card-bg: #ffffff;
+            --text-color: #333333;
+            --border-color: #cccccc;
+            --whatsapp-green: #25D366;
+            --whatsapp-hover: #1da851;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        header {
+            background-color: var(--primary-color);
+            color: #ffffff;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        header h1 {
+            font-size: 1.8rem;
+            letter-spacing: 1px;
+        }
+
+        main {
+            flex: 1;
+            max-width: 1200px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 0 15px;
+        }
+
+        .search-container {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        @media (min-width: 768px) {
+            .search-container {
+                flex-direction: row;
+                align-items: center;
+            }
+        }
+
+        .form-group {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .form-group label {
+            font-weight: bold;
+            font-size: 0.9rem;
+            color: #555;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border-color);
+            border-radius: 5px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        input[type="text"]:focus, select:focus {
+            border-color: var(--primary-color);
+        }
+
+        .stats-bar {
+            margin-bottom: 15px;
+            font-size: 0.95rem;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .table-responsive {
+            width: 100%;
+            overflow-x: auto;
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+            font-size: 0.9rem;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            border-bottom: 1px solid #eef2f5;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: #444;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        tr:hover {
+            background-color: #f1f5f9;
+        }
+
+        .input-notes {
+            padding: 8px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            width: 100%;
+            min-width: 140px;
+            font-size: 0.85rem;
+        }
+
+        .btn-whatsapp {
+            background-color: var(--whatsapp-green);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+            text-decoration: none;
+            white-space: nowrap;
+            transition: background-color 0.2s;
+        }
+
+        .btn-whatsapp:hover {
+            background-color: var(--whatsapp-hover);
+        }
+
+        @media (max-width: 600px) {
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+
+            thead {
+                display: none;
+            }
+
+            tr {
+                margin-bottom: 15px;
+                border: 1px solid #e0e0e0;
+                border-radius: 8px;
+                padding: 10px;
+                background-color: #fff;
+            }
+
+            td {
+                border-bottom: 1px solid #eee;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 8px 5px;
+            }
+
+            td:last-child {
+                border-bottom: none;
+            }
+
+            td::before {
+                content: attr(data-label);
+                font-weight: bold;
+                color: #666;
+                margin-right: 10px;
+                font-size: 0.85rem;
+            }
+
+            .input-notes {
+                max-width: 60%;
+            }
+        }
+
+        footer {
+            background-color: #222;
+            color: #fff;
+            text-align: center;
+            padding: 15px;
+            font-size: 0.85rem;
+            margin-top: auto;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 30px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>CAMBIO KAS-DFC</h1>
+    </header>
+
+    <main>
+        <section class="search-container">
+            <div class="form-group">
+                <label for="searchInput">Buscar Centro (insensible a acentos/mayúsculas):</label>
+                <input type="text" id="searchInput" placeholder="Escribe el nombre o código del centro..." oninput="filtrarCentros()">
+            </div>
+            <div class="form-group">
+                <label for="centerSelect">Seleccionar Centro:</label>
+                <select id="centerSelect" onchange="mostrarDatosCentro()">
+                    <option value="">-- Cargando archivos Excel... --</option>
+                </select>
+            </div>
+        </section>
+
+        <div class="stats-bar" id="statsBar">Cargando datos directamente desde los archivos Excel...</div>
+
+        <div class="table-responsive">
+            <table id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Modelo</th>
+                        <th>SACE</th>
+                        <th>S/N</th>
+                        <th>Àmbit</th>
+                        <th>Servei</th>
+                        <th>Fi de Servei</th>
+                        <th>Localitzat</th>
+                        <th>Datos Adicionales</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    <tr>
+                        <td colspan="9" class="no-data">Por favor, selecciona un centro.</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <footer>
+        (C)opyright by Jesús Flores CAMBIO KAS-DFC
+    </footer>
+
+    <script>
+        // Nombres de los archivos Excel ubicados en la raíz
+        const excelFileNames = [
+            "08034709_INSTITUT_DE_QUIMICA_I_BIOTECNOLOGIA_DE_BARCELONA_20261015.xlsx",
+            "08052785_ESCOLA_VILA_OLIMPICA_20261015.xlsx",
+            "08054903_ESCOLA_MEDITERRANIA_20261015.xlsx",
+            "08055002_CFA_BARRI_GOTIC_20261015.xlsx",
+            "08055683_CFA_MANUEL_SACRISTAN_20261015.xlsx",
+            "08061701_CFA_MARIA_RUBIES_20261015.xlsx",
+            "08061907_CFA_BARCELONETA_20261015.xlsx",
+            "08078385_INSTITUT_TIC_DE_BARCELONA_20261015.xlsx",
+            "08078403_INSTITUT_DE_TECNIQUES_AUDIOVISUALS_I_DE_L_ESPECTACLE_DE_BCN_20261015.xlsx"
+        ];
+
+        let loadedDatabase = [];
+
+        // Función para quitar acentos y convertir a minúsculas
+        function normalizarTexto(texto) {
+            return (texto || "")
+                .toString()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "")
+                .toLowerCase();
+        }
+
+        // Formatear nombres legibles a partir del nombre del archivo Excel
+        function obtenerNombreCentro(filename) {
+            const clean = filename.replace('.xlsx', '');
+            const parts = clean.split('_');
+            const code = parts[0];
+            const nameParts = parts.slice(1, -1);
+            return `${code} - ${nameParts.join(' ')}`;
+        }
+
+        // Limpiar formato de fecha de los registros
+        function formatearFecha(val) {
+            if (!val) return '';
+            let str = val.toString().trim();
+            if (str.includes(' 00:00:00')) {
+                str = str.split(' ')[0];
+            } else if (str.includes('T')) {
+                str = str.split('T')[0];
+            }
+            return str;
+        }
+
+        // Cargar y procesar todos los Excels en directo desde la raíz
+        async function cargarExcelsDesdeRaiz() {
+            const statsBar = document.getElementById("statsBar");
+            loadedDatabase = [];
+
+            try {
+                for (const file of excelFileNames) {
+                    // Parámetro anti-caché ?v=timestamp para forzar la lectura del Excel actualizado
+                    const cacheBusterUrl = `${file}?v=${new Date().getTime()}`;
+                    const response = await fetch(cacheBusterUrl);
+                    
+                    if (!response.ok) {
+                        console.warn(`No se pudo cargar el archivo: ${file}`);
+                        continue;
+                    }
+
+                    const arrayBuffer = await response.arrayBuffer();
+                    const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+
+                    // Tomar la primera hoja o 'Equipament'
+                    const sheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[sheetName];
+                    const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    const code = file.split('_')[0];
+                    const centerName = obtenerNombreCentro(file);
+
+                    const items = rawJson.map(row => ({
+                        Model: (row['Model'] || '').toString().trim(),
+                        SACE: (row['SACE'] || '').toString().trim(),
+                        SN: (row['S/N'] || '').toString().trim(),
+                        Ambit: (row['Àmbit'] || '').toString().trim(),
+                        Servei: (row['Servei'] || '').toString().trim(),
+                        FiServei: formatearFecha(row['Fi de Servei']),
+                        Localitzat: (row['Localitzat'] || '').toString().trim(),
+                        ID: (row['ID'] || '').toString().trim()
+                    }));
+
+                    loadedDatabase.push({
+                        code: code,
+                        name: centerName,
+                        fileName: file,
+                        items: items
+                    });
+                }
+
+                cargarDesplegable(loadedDatabase);
+                statsBar.textContent = `Centros cargados en directo: ${loadedDatabase.length} archivos Excel procesados correctamente.`;
+            } catch (error) {
+                console.error("Error al leer los archivos Excel:", error);
+                statsBar.textContent = "Error al leer los archivos Excel. Asegúrate de ejecutar la web sobre un servidor web (http/localhost).";
+            }
+        }
+
+        function cargarDesplegable(centros) {
+            const select = document.getElementById("centerSelect");
+            select.innerHTML = '<option value="">-- Selecciona un centro --</option>';
+
+            centros.forEach((centro) => {
+                const opt = document.createElement("option");
+                opt.value = centro.code;
+                opt.textContent = centro.name;
+                select.appendChild(opt);
+            });
+        }
+
+        function filtrarCentros() {
+            const query = normalizarTexto(document.getElementById("searchInput").value.trim());
+            const centrosFiltrados = loadedDatabase.filter(c => normalizarTexto(c.name).includes(query));
+
+            cargarDesplegable(centrosFiltrados);
+
+            if (centrosFiltrados.length === 1) {
+                document.getElementById("centerSelect").value = centrosFiltrados[0].code;
+                mostrarDatosCentro();
+            } else {
+                mostrarDatosCentro();
+            }
+        }
+
+        function mostrarDatosCentro() {
+            const code = document.getElementById("centerSelect").value;
+            const tbody = document.getElementById("tableBody");
+            const statsBar = document.getElementById("statsBar");
+
+            if (!code) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">Por favor, selecciona un centro del desplegable.</td></tr>';
+                statsBar.textContent = `Centros cargados: ${loadedDatabase.length}`;
+                return;
+            }
+
+            const centro = loadedDatabase.find(c => c.code === code);
+            if (!centro || !centro.items || centro.items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="9" class="no-data">No se encontraron registros en el archivo Excel.</td></tr>';
+                statsBar.textContent = `Centro: ${centro ? centro.name : code} (0 registros)`;
+                return;
+            }
+
+            statsBar.textContent = `Centro seleccionado: ${centro.name} (${centro.items.length} equipos leídos directamente del Excel)`;
+            tbody.innerHTML = '';
+
+            centro.items.forEach((item, index) => {
+                const tr = document.createElement("tr");
+
+                tr.innerHTML = `
+                    <td data-label="Modelo">${item.Model || '-'}</td>
+                    <td data-label="SACE">${item.SACE || '-'}</td>
+                    <td data-label="S/N">${item.SN || '-'}</td>
+                    <td data-label="Àmbit">${item.Ambit || '-'}</td>
+                    <td data-label="Servei">${item.Servei || '-'}</td>
+                    <td data-label="Fi de Servei">${item.FiServei || '-'}</td>
+                    <td data-label="Localitzat">${item.Localitzat || '-'}</td>
+                    <td data-label="Datos Adicionales">
+                        <input type="text" id="input_${index}" class="input-notes" placeholder="Introducir datos...">
+                    </td>
+                    <td data-label="Acción">
+                        <button type="button" class="btn-whatsapp" onclick="enviarWhatsApp('${centro.name.replace(/'/g, "\\'")}', ${index}, '${item.Model.replace(/'/g, "\\'")}', '${item.SACE}', '${item.SN}')">
+                            ENVIAR
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function enviarWhatsApp(centroNombre, index, model, sace, sn) {
+            const inputVal = document.getElementById(`input_${index}`).value.trim();
+            const telefono = "34620940066";
+
+            let mensaje = `*CAMBIO KAS-DFC*\n`;
+            mensaje += `*Centro:* ${centroNombre}\n`;
+            mensaje += `*Modelo:* ${model}\n`;
+            mensaje += `*SACE:* ${sace}\n`;
+            mensaje += `*S/N:* ${sn}\n`;
+            if (inputVal) {
+                mensaje += `*Datos Adicionales:* ${inputVal}\n`;
+            } else {
+                mensaje += `*Datos Adicionales:* (Sin observaciones)\n`;
+            }
+
+            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
+        }
+
+        // Cargar Excels al abrir la página
+        document.addEventListener("DOMContentLoaded", () => {
+            cargarExcelsDesdeRaiz();
+        });
+    </script>
+</body>
+</html>
