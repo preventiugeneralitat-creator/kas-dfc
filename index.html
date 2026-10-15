@@ -8,7 +8,17 @@
     <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CAMBIO KAS-DFC</title>
+
+    <!-- Configuración Progressive Web App (PWA) -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0056b3">
     
+    <!-- Soporte para iOS / Safari (iPhone & iPad) -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="KAS-DFC">
+    <link rel="apple-touch-icon" href="icon.png">
+
     <!-- Librería SheetJS para leer archivos Excel .xlsx en directo -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
@@ -50,6 +60,54 @@
         header h1 {
             font-size: 1.8rem;
             letter-spacing: 1px;
+        }
+
+        /* Banner de Instalación App */
+        .install-banner {
+            display: none;
+            background-color: #e3f2fd;
+            border: 1px solid #90caf9;
+            padding: 12px 15px;
+            margin: 15px auto 0 auto;
+            max-width: 1200px;
+            width: calc(100% - 30px);
+            border-radius: 8px;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .install-banner-content {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .install-banner img {
+            width: 45px;
+            height: 45px;
+            border-radius: 8px;
+        }
+
+        .install-banner-text {
+            font-size: 0.9rem;
+            color: #0d47a1;
+        }
+
+        .btn-install {
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .btn-install:hover {
+            background-color: var(--primary-hover);
         }
 
         main {
@@ -238,6 +296,18 @@
         <h1>CAMBIO KAS-DFC</h1>
     </header>
 
+    <!-- Banner emergente para instalación automática en móviles/pantalla de inicio -->
+    <div id="installBanner" class="install-banner">
+        <div class="install-banner-content">
+            <img src="icon.png" alt="Icono App">
+            <div class="install-banner-text">
+                <strong>Instalar CAMBIO KAS-DFC</strong><br>
+                Añade la aplicación a tu teléfono para acceder rápidamente.
+            </div>
+        </div>
+        <button id="btnInstall" class="btn-install">INSTALAR</button>
+    </div>
+
     <main>
         <section class="search-container">
             <div class="form-group">
@@ -283,6 +353,43 @@
     </footer>
 
     <script>
+        // Registrar Service Worker para PWA
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(reg => console.log('Service Worker registrado con éxito', reg))
+                    .catch(err => console.error('Error registrando Service Worker', err));
+            });
+        }
+
+        // Prompt de instalación automática de WebApp
+        let deferredPrompt;
+        const installBanner = document.getElementById('installBanner');
+        const btnInstall = document.getElementById('btnInstall');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBanner.style.display = 'flex';
+        });
+
+        btnInstall.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') {
+                    console.log('App instalada');
+                }
+                deferredPrompt = null;
+                installBanner.style.display = 'none';
+            }
+        });
+
+        window.addEventListener('appinstalled', () => {
+            installBanner.style.display = 'none';
+            console.log('CAMBIO KAS-DFC instalada como PWA');
+        });
+
         // Nombres de los archivos Excel ubicados en la raíz
         const excelFileNames = [
             "08034709_INSTITUT_DE_QUIMICA_I_BIOTECNOLOGIA_DE_BARCELONA_20261015.xlsx",
@@ -298,7 +405,6 @@
 
         let loadedDatabase = [];
 
-        // Función para quitar acentos y convertir a minúsculas
         function normalizarTexto(texto) {
             return (texto || "")
                 .toString()
@@ -307,7 +413,6 @@
                 .toLowerCase();
         }
 
-        // Formatear nombres legibles a partir del nombre del archivo Excel
         function obtenerNombreCentro(filename) {
             const clean = filename.replace('.xlsx', '');
             const parts = clean.split('_');
@@ -316,7 +421,6 @@
             return `${code} - ${nameParts.join(' ')}`;
         }
 
-        // Limpiar formato de fecha de los registros
         function formatearFecha(val) {
             if (!val) return '';
             let str = val.toString().trim();
@@ -328,14 +432,12 @@
             return str;
         }
 
-        // Cargar y procesar todos los Excels en directo desde la raíz
         async function cargarExcelsDesdeRaiz() {
             const statsBar = document.getElementById("statsBar");
             loadedDatabase = [];
 
             try {
                 for (const file of excelFileNames) {
-                    // Parámetro anti-caché ?v=timestamp para forzar la lectura del Excel actualizado
                     const cacheBusterUrl = `${file}?v=${new Date().getTime()}`;
                     const response = await fetch(cacheBusterUrl);
                     
@@ -347,7 +449,6 @@
                     const arrayBuffer = await response.arrayBuffer();
                     const workbook = XLSX.read(arrayBuffer, { type: 'array' });
 
-                    // Tomar la primera hoja o 'Equipament'
                     const sheetName = workbook.SheetNames[0];
                     const worksheet = workbook.Sheets[sheetName];
                     const rawJson = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
@@ -378,7 +479,7 @@
                 statsBar.textContent = `Centros cargados en directo: ${loadedDatabase.length} archivos Excel procesados correctamente.`;
             } catch (error) {
                 console.error("Error al leer los archivos Excel:", error);
-                statsBar.textContent = "Error al leer los archivos Excel. Asegúrate de ejecutar la web sobre un servidor web (http/localhost).";
+                statsBar.textContent = "Error al leer los archivos Excel.";
             }
         }
 
@@ -472,7 +573,6 @@
             window.open(url, '_blank');
         }
 
-        // Cargar Excels al abrir la página
         document.addEventListener("DOMContentLoaded", () => {
             cargarExcelsDesdeRaiz();
         });
